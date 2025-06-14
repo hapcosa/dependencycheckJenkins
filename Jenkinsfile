@@ -4,7 +4,10 @@ pipeline {
     tools {
         nodejs 'NodeJS-24' // Nombre de tu instalación de NodeJS en Jenkins
     }
-
+    steps {
+        sh 'pwd'  // Imprime la ruta actual (debería ser el workspace)
+        sh 'ls -la'  // Lista archivos antes y después de cada comando
+    }
     stages {
         stage('Instalar dependencias') {
             steps {
@@ -21,7 +24,6 @@ pipeline {
         stage('OWASP Dependency Check') {
             steps {
                 sh 'dependency-check --project "SafeNotes" --scan . --format "HTML" --out ./dependency-check-report'
-
             }
             post {
                 always {
