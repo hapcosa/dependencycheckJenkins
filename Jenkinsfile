@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs "NodeJS-24" // Nombre de tu instalación de NodeJS en Jenkins
+        nodejs 'NodeJS-24' // Nombre de tu instalación de NodeJS en Jenkins
     }
 
     stages {
@@ -20,20 +20,12 @@ pipeline {
 
         stage('OWASP Dependency Check') {
             steps {
-             
                 sh 'dependency-check --project "SafeNotes" --scan . --format "HTML" --out ./dependency-check-report'
 
-                
             }
             post {
                 always {
-                   
-                    archiveArtifacts artifacts: 'dependency-check-report/*.html', fingerprint: true
-                }
-            }
-            post {
-    always {
-        publishHTML target: [
+                    publishHTML target: [
             allowMissing: false,
             alwaysLinkToLastBuild: true,
             keepAll: true,
@@ -41,15 +33,15 @@ pipeline {
             reportFiles: 'dependency-check-report.html',
             reportName: 'Reporte de Seguridad OWASP'
         ]
-    }
-}
+                }
+            }
         }
     }
 
     post {
         always {
             // Limpieza o notificaciones adicionales
-            echo "Pipeline completado - Revisa el reporte de seguridad en dependency-check-report/"
+            echo 'Pipeline completado - Revisa el reporte de seguridad en dependency-check-report/'
         }
     }
 }
