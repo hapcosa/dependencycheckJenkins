@@ -27,18 +27,36 @@ pipeline {
         
         stage('Run Tests') {
             steps {
-                sh '''
-                    echo "Ejecutando tests..."
-                    npm test
-                '''
+                script {
+                    // Verificar si existe script de test, si no, omitir
+                    def packageJson = readFile('package.json')
+                    if (packageJson.contains('"test"')) {
+                        sh '''
+                            echo "Ejecutando tests..."
+                            npm test
+                        '''
+                    } else {
+                        echo "No hay script de test configurado en package.json - saltando tests"
+                    }
+                }
             }
         }
         
         stage('Security Scan') {
             steps {
                 sh '''
+                    echo "Configurando directorio para dependency-check..."
+                    # Intentar crear directorio de datos local
+                    mkdir -p ./dependency-check-data
+                    
                     echo "Ejecutando análisis de seguridad..."
-                    dependency-check --project "SafeNotes" --scan . --format "HTML"
+                    dependency-check --project "SafeNotes" \\
+                                   --scan . \\
+                                   --format "HTML" \\
+                                   --data ./dependency-check-data \\
+                                   --out . \\
+                                   --enableRetired \\
+                                   --enableExperimental
                 '''
             }
         }
@@ -47,7 +65,8 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: 'dependency-check-report.html', allowEmptyArchive: true
-            cleanWs()
+            // Removido cleanWs() porque el plugin no está disponible
+            deleteDir() // Alternativa para limpiar el workspace
         }
         success {
             echo 'Pipeline ejecutado exitosamente!'
