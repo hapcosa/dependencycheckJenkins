@@ -1,57 +1,59 @@
 pipeline {
     agent any
-
+    
     tools {
-        nodejs 'NodeJS-24' // Nombre de tu instalación de NodeJS en Jenkins
+        nodejs 'NodeJS-24' // Asegúrate de que este nombre coincida con tu instalación
     }
-
+    
     stages {
-        // Etapa 1: Verificar workspace (aquí sí van los steps)
         stage('Preparar entorno') {
             steps {
-                sh 'pwd'  // Imprime la ruta actual (debería ser el workspace)
-                sh 'ls -la'  // Lista archivos antes de ejecutar comandos
+                sh 'pwd'
+                sh 'ls -la'
             }
         }
-
+        
         stage('Instalar dependencias') {
             steps {
                 sh 'npm install'
             }
         }
-
+        
         stage('Ejecutar tests') {
             steps {
                 sh 'npm test'
             }
         }
-
+        
         stage('OWASP Dependency Check') {
             steps {
-                // Asegúrate de que el directorio de salida existe
                 sh 'mkdir -p dependency-check-report'
-                // Ejecuta el escaneo
                 sh 'dependency-check --project "SafeNotes" --scan . --format HTML --out ./dependency-check-report'
             }
             post {
                 always {
-                    // Publica el reporte HTML (¡usa la ruta correcta!)
-                    publishHTML target: [
+                    publishHTML([
                         allowMissing: false,
                         alwaysLinkToLastBuild: true,
                         keepAll: true,
-                        reportDir: 'dependency-check-report',  // Corregido: misma ruta que --out
+                        reportDir: 'dependency-check-report',
                         reportFiles: 'dependency-check-report.html',
                         reportName: 'Reporte de Seguridad OWASP'
-                    ]
+                    ])
                 }
             }
         }
     }
-
+    
     post {
         always {
             echo 'Pipeline completado - Revisa el reporte de seguridad en dependency-check-report/'
+        }
+        success {
+            echo 'Pipeline ejecutado exitosamente'
+        }
+        failure {
+            echo 'Pipeline falló - Revisa los logs para más detalles'
         }
     }
 }
