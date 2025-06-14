@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+
+    tools {
+        nodejs "NodeJS-18" // Nombre de tu instalación de NodeJS en Jenkins
+    }
+
+    stages {
+        stage('Instalar dependencias') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Ejecutar tests') {
+            steps {
+                sh 'npm test'
+            }
+        }
+
+        stage('OWASP Dependency Check') {
+            steps {
+                // Opción 1: Si Dependency-Check está instalado en el servidor
+                sh 'dependency-check --project "SafeNotes" --scan . --format "HTML" --out ./dependency-check-report'
+
+                // Opción 2: Si usas Docker (recomendado para consistencia)
+                // sh 'docker run --rm -v "$(pwd)":/src -v "$(pwd)/dependency-check-report":/report owasp/dependency-check --scan /src --project "SafeNotes" --format HTML --out /report'
+            }
+            post {
+                always {
+                    // Archivar el reporte HTML (opcional)
+                    archiveArtifacts artifacts: 'dependency-check-report/*.html', fingerprint: true
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // Limpieza o notificaciones adicionales
+            echo "Pipeline completado - Revisa el reporte de seguridad en dependency-check-report/"
+        }
+    }
+}
