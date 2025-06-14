@@ -20,18 +20,29 @@ pipeline {
 
         stage('OWASP Dependency Check') {
             steps {
-                // Opción 1: Si Dependency-Check está instalado en el servidor
+             
                 sh 'dependency-check --project "SafeNotes" --scan . --format "HTML" --out ./dependency-check-report'
 
-                // Opción 2: Si usas Docker (recomendado para consistencia)
-                // sh 'docker run --rm -v "$(pwd)":/src -v "$(pwd)/dependency-check-report":/report owasp/dependency-check --scan /src --project "SafeNotes" --format HTML --out /report'
+                
             }
             post {
                 always {
-                    // Archivar el reporte HTML (opcional)
+                   
                     archiveArtifacts artifacts: 'dependency-check-report/*.html', fingerprint: true
                 }
             }
+            post {
+    always {
+        publishHTML target: [
+            allowMissing: false,
+            alwaysLinkToLastBuild: true,
+            keepAll: true,
+            reportDir: 'report',
+            reportFiles: 'dependency-check-report.html',
+            reportName: 'Reporte de Seguridad OWASP'
+        ]
+    }
+}
         }
     }
 
